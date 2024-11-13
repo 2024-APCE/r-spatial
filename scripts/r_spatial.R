@@ -23,6 +23,9 @@ library(patchwork)  # for combining multiple ggplots in one panel plot
 # also see https://www.datanovia.com/en/blog/top-r-color-palettes-to-know-for-great-data-visualization/
 # Base R palettes
 barplot(rep(1,10), col = grey.colors(10))
+grey.colors(10)
+mycolors<-c("red","white","blue")
+mycolors
 barplot(rep(1,10), col = rev(topo.colors(10))) # rev turns the scale arround
 barplot(rep(1,10), col = rev(terrain.colors(10)))
 library(RColorBrewer) 
