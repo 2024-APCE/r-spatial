@@ -142,10 +142,10 @@ xlimits<-sf::st_bbox(studyarea)[c(1,3)]
 ylimits<-sf::st_bbox(studyarea)[c(2,4)]
 saExt<-terra::ext(studyarea)
 saExt
-# crop the woody biomass to the extent of the studyarea
-woodybiom_sa<-terra::crop(woodybiom,saExt)
 
-# plot the woody biomass
+
+# plot the woody biomass for the study area
+woodybiom_sa<-terra::crop(woodybiom,saExt) # crop to study area
 woody_map_sa<-ggplot() +
   tidyterra::geom_spatraster(data=woodybiom_sa) +
   scale_fill_gradientn(colours=rev(terrain.colors(6)),
@@ -168,36 +168,113 @@ woody_map_sa<-ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 woody_map_sa  
 
-
-# make maps also for the other layers that you found
-# make distance to river map
-dist2river_sa<-terra::rast("./_MyData/rivers/DistanceToRiver.tif")
-map_dist2river_sa<-ggplot() +
-  tidyterra::geom_spatraster(data=dist2river_sa/1000) +
-  scale_fill_gradientn(colours = pal_zissou2,
-                       limits=c(0,10),
+# plot elevation map for the study area
+elevation_sa<-terra::crop(elevation,saExt) # crop to study area
+elevation_map_sa<-ggplot() +
+  tidyterra::geom_spatraster(data=elevation_sa) +
+  scale_fill_gradientn(colours=terrain.colors(6),
+                       limits=c(1500,2100),
                        oob=squish,
-                       name="kilometers") +
-  tidyterra::geom_spatvector(data = protected_areas,fill=NA, linewidth=0.7) +
-  tidyterra::geom_spatvector(data=rivers,linewidth=0.3,col="blue") +
-  labs(title = "Distance to rivers") +
-  coord_sf(xlim=xlimits,ylim=ylimits, # set bounding box
-           expand=F,
-           datum=sf::st_crs(32736)) +   # keep in original projected coordinates
+                       name="meters") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.5) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=0.5,col="red") +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="lightblue",linewidth=0.5) +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="blue",linewidth=0.5) +
+  labs(title="elevation") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
   theme(axis.text = element_blank(),
-        axis.ticks = element_blank()) +   # Remove axis coordinate labels
-  ggspatial::annotation_scale(  # Add a scale bar
-    location = "bl",             # Position: bottom left
-    width_hint = 0.2)             # Adjust width of the scale bar +
-map_dist2river_sa
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+elevation_map_sa  
+
+# plot rainfall map for the study area
+rainfall_sa<-terra::crop(rainfall,saExt) # crop to study area
+rainfall_map_sa<-ggplot() +
+  tidyterra::geom_spatraster(data=rainfall_sa) +
+  scale_fill_gradientn(colours=pal_zissou1,
+                       limits=c(600,1300),
+                       oob=squish,
+                       name="mm/yr") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.5) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=0.5,col="red") +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="lightblue",linewidth=0.5) +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="blue",linewidth=0.5) +
+  labs(title="Rainfall") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+rainfall_map_sa  
+
+# plot distance to river for the study area
+dist2river_sa<-terra::rast("./_MyData/rivers/DistanceToRiver.tif")
+dist2river_map_sa<-ggplot() +
+  tidyterra::geom_spatraster(data=dist2river_sa) +
+  scale_fill_gradientn(colours=topo.colors(6),
+                       limits=c(0,12000),
+                       oob=squish,
+                       name="meters") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.5) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=0.5,col="red") +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="lightblue",linewidth=0.5) +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="blue",linewidth=0.5) +
+  labs(title="Distance to river") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+dist2river_map_sa
+
+# add core_protected_areas to map 
+r<-terra::rast("./2022_protected_areas/CoreProtectedAreas.tif") 
+CoreProtectedAreas_sa <- r |> #  replace NA by 0
+  is.na() |>
+  terra::ifel(0,r) |>
+  as.factor()
+  
+CoreProtectedAreas_map_sa<-ggplot() +
+  tidyterra::geom_spatraster(data=CoreProtectedAreas_sa) +
+  scale_fill_manual(values=c("white","grey")) +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.5) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=0.5,col="red") +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="lightblue",linewidth=0.5) +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="blue",linewidth=0.5) +
+  labs(title="Core protected areas") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+CoreProtectedAreas_map_sa
+
+# create 500 random points in our study area
 
 
 # combine the maps with patchwork
-all_maps_sa<-woody_map_sa +map_dist2river_sa +
+all_maps_sa<-woody_map_sa +dist2river_map_sa + elevation_map_sa + 
+  CoreProtectedAreas_map_sa + rainfall_map_sa +
   patchwork::plot_layout(ncol=2)
 all_maps_sa
 ggsave("./figures/all_maps_sa.png", width = 18, height = 18, units = "cm",dpi=300)
-# create 500 random points in our study area
 
 
 # and add them to the previous map
