@@ -294,6 +294,29 @@ cec_map_sa<-ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 cec_map_sa
 
+# landform valleys and plains (CEC)
+landform_sa<-terra::rast("./_MyData/landforms/valleysPlains.tif")
+landform_map_sa<-ggplot() +
+  tidyterra::geom_spatraster(data=as.factor(landform_sa)) +
+  scale_fill_manual(values=c("brown","green"),
+                    labels=c("hills","valleys\nand\nplains")) +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.7) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=0.5,col="red") +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="lightblue",linewidth=0.5) +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="blue",linewidth=0.5) +
+  labs(title="Landform") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+landform_map_sa
+
+
 # core_protected_areas  map 
 r<-terra::rast("./2022_protected_areas/CoreProtectedAreas.tif") 
 CoreProtectedAreas_sa <- r |> #  replace NA by 0
@@ -344,10 +367,10 @@ rpoints_map_sa
 # combine the maps with patchwork
 all_maps_sa<-woody_map_sa +dist2river_map_sa + elevation_map_sa + 
   CoreProtectedAreas_map_sa + rainfall_map_sa + 
-  cec_map_sa + burnfreq_map_sa + rpoints_map_sa +
-  patchwork::plot_layout(ncol=2)
+  cec_map_sa + burnfreq_map_sa + landform_map_sa +rpoints_map_sa +
+  patchwork::plot_layout(ncol=3)
 all_maps_sa
-ggsave("./figures/all_maps_sa.png", width = 18, height = 18, units = "cm",dpi=300)
+ggsave("./figures/all_maps_sa.png", width = 297, height = 210, units = "mm",dpi=300)
 
 # extract your the values of the different raster layers to the points
 # Extract raster values at the points
@@ -378,6 +401,11 @@ burnfreq_points <- terra::extract(burnfreq_sa, rpoints) |>
   as_tibble() |>
   dplyr::rename(burnfreq=burned_sum)
 burnfreq_points
+landform_points <- terra::extract(landform_sa, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(valleysPlains=remapped)
+landform_points
+
 
 
 
@@ -385,7 +413,8 @@ burnfreq_points
 # use woody biomass as the last variable
 pointdata<-cbind(dist2river_points[,2],elevation_points[,2],
                  CorProtAr_points[,2],rainfall_points[,2], 
-                 cec_points[,2],burnfreq_points[,2],woody_points[,2]) |>
+                 cec_points[,2],burnfreq_points[,2],
+                 landform_points[,2],woody_points[,2]) |>
   as_tibble()
 pointdata
 
@@ -405,7 +434,7 @@ psych::pairs.panels(
 # make long format
 names(pointdata)
 pointdata_long<-pivot_longer(data=pointdata,
-                             cols = dist2river:burnfreq, # all except woody
+                             cols = dist2river:valleysPlains, # all except woody
                              names_to ="pred_var",
                              values_to = "pred_val")
 pointdata_long
@@ -413,7 +442,19 @@ pointdata_long
 # panel plot
 ggplot(data=pointdata_long, mapping=aes(x=pred_val,y=woody,group=pred_var)) +
   geom_point() +
-  geom_smooth(method="lm",formula="y~x",col="blue") +
-  geom_smooth(method="lm",formula="y~x+I(x^2)",col="red") +
-  facet_wrap(~pred_var,scales="free")
+  geom_smooth() +
+  ylim(0,40) +
+  facet_wrap(~pred_var,scales="free") 
+
+# do a pca
+# Load the vegan package
+library(vegan)
+# Example data: Load a dataset or use a built-in one (like 'varespec')
+data(varespec)
+# Perform PCA using the rda() function
+pca_result <- rda(varespec, scale = TRUE)
+# Display a summary of the PCA
+summary(pca_result)
+# Plot the PCA
+plot(pca_result, scaling = 2)  # Use scaling = 1 for distance preservation, scaling = 2 for correlations
   
