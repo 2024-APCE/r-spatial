@@ -54,6 +54,8 @@ rivers<-terra::vect("./2022_rivers/rivers_hydrosheds.gpkg",
 sf::st_layers("./lakes/lakes.gpkg")
 lakes<-terra::vect("./lakes/lakes.gpkg",
                    layer="lakes")  
+
+# read your study area !! check if this matches indeed the name of your area
 sf::st_layers("./studyarea/studyarea.gpkg")
 studyarea<-terra::vect("./studyarea/studyarea.gpkg",
                               layer="my_study_area")
@@ -124,7 +126,7 @@ elevation_map
 all_maps<-woody_map +elevation_map +
   patchwork::plot_layout(ncol=1)
 all_maps
-ggsave("./figures/all_maps.png", width = 18, height = 18, units = "cm",dpi=300)
+ggsave("./figures/all_maps_wholeEcosystem.png", width = 18, height = 18, units = "cm",dpi=300)
   
 
 # plot the rainfall map
@@ -220,6 +222,9 @@ rainfall_map_sa<-ggplot() +
         axis.ticks = element_blank()) +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 rainfall_map_sa  
+
+### the following you can only do for layers that you have generated yourself 
+### and downloaded from Earth Engine and you have put in your folder ./MyData
 
 # plot distance to river for the study area
 dist2river_sa<-terra::rast("./_MyData/rivers/DistanceToRiver.tif")
@@ -374,6 +379,7 @@ all_maps_sa<-woody_map_sa +dist2river_map_sa + elevation_map_sa +
 all_maps_sa
 ggsave("./figures/all_maps_sa.png", width = 297, height = 210, units = "mm",dpi=300)
 
+#########################
 # extract your the values of the different raster layers to the points
 # Extract raster values at the points
 woody_points <- terra::extract(woody_sa, rpoints) |> 
