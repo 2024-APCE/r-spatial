@@ -295,15 +295,15 @@ cec_map_sa<-ggplot() +
 cec_map_sa
 
 # landform valleys and plains (CEC)
-landform_sa<-terra::rast("./_MyData/landforms/valleysPlains.tif")
+landform_sa<-terra::rast("./_MyData/landforms/hills.tif")
 landform_map_sa<-ggplot() +
   tidyterra::geom_spatraster(data=as.factor(landform_sa)) +
-  scale_fill_manual(values=c("brown","green"),
-                    labels=c("hills","valleys\nand\nplains")) +
+  scale_fill_manual(values=c("black","orange"),
+                    labels=c("valleys\nand\nplains","hills")) +
   tidyterra::geom_spatvector(data=protected_areas,
                              fill=NA,linewidth=0.7) +
   tidyterra::geom_spatvector(data=studyarea,
-                             fill=NA,linewidth=0.5,col="red") +
+                             fill=NA,linewidth=0.5,col="green") +
   tidyterra::geom_spatvector(data=lakes,
                              fill="lightblue",linewidth=0.5) +
   tidyterra::geom_spatvector(data=rivers,
@@ -343,9 +343,11 @@ CoreProtectedAreas_map_sa<-ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 CoreProtectedAreas_map_sa
 
-# create 500 random points in your study area
+# create 250 random points in your study area
 set.seed(123)
-rpoints <- terra::spatSample(studyarea, size = 500, method = "random")
+rpoints <- terra::spatSample(studyarea, size = 250, 
+                             method = "random")
+# plot the points
 rpoints_map_sa<-ggplot() +
   tidyterra::geom_spatvector(data=rpoints, size=0.5) +
   tidyterra::geom_spatvector(data=protected_areas,
@@ -403,7 +405,7 @@ burnfreq_points <- terra::extract(burnfreq_sa, rpoints) |>
 burnfreq_points
 landform_points <- terra::extract(landform_sa, rpoints) |> 
   as_tibble() |>
-  dplyr::rename(valleysPlains=remapped)
+  dplyr::rename(hills=remapped)
 landform_points
 
 
@@ -434,7 +436,7 @@ psych::pairs.panels(
 # make long format
 names(pointdata)
 pointdata_long<-pivot_longer(data=pointdata,
-                             cols = dist2river:valleysPlains, # all except woody
+                             cols = dist2river:hills, # all except woody
                              names_to ="pred_var",
                              values_to = "pred_val")
 pointdata_long
@@ -449,12 +451,28 @@ ggplot(data=pointdata_long, mapping=aes(x=pred_val,y=woody,group=pred_var)) +
 # do a pca
 # Load the vegan package
 library(vegan)
-# Example data: Load a dataset or use a built-in one (like 'varespec')
-data(varespec)
 # Perform PCA using the rda() function
-pca_result <- rda(varespec, scale = TRUE)
+pca_result <- vegan::rda(pointdata,
+                         scale = TRUE)
 # Display a summary of the PCA
 summary(pca_result)
+
 # Plot the PCA
-plot(pca_result, scaling = 2)  # Use scaling = 1 for distance preservation, scaling = 2 for correlations
+plot(pca_result, scaling = 2, type="n", xlab="",ylab="")  # Use scaling = 1 for distance preservation, scaling = 2 for correlations
+# Add points for samples
+points(pca_result, display = "sites", pch=pointdata$CorProtAr+1, col = pointdata$hills+1, bg = "blue", cex = 1)
+# Add arrows for variables
+arrows(0, 0, scores(pca_result, display = "species")[, 1], scores(pca_result, display = "species")[, 2], 
+       length = 0.1, col = "red")
+# Label the variables with arrows
+text(scores(pca_result, display = "species")[, 1], scores(pca_result, display = "species")[, 2], 
+     labels = colnames(pointdata), col = "red", cex = 0.8, pos = 4)
+# Add axis labels and a title
+title(main = "PCA Biplot")
+xlabel <- paste("PC1 (", round(pca_result$CA$eig[1] / sum(pca_result$CA$eig) * 100, 1), "%)", sep = "")
+ylabel <- paste("PC2 (", round(pca_result$CA$eig[2] / sum(pca_result$CA$eig) * 100, 1), "%)", sep = "")
+title(xlab=xlabel)
+title(ylab=ylabel)
+# add contours for woody cover
+vegan::ordisurf(pca_result, pointdata$woody, add = TRUE, col = "green4")
   
