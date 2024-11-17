@@ -299,7 +299,7 @@ cec_map_sa<-ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 cec_map_sa
 
-# landform valleys and plains (CEC)
+# landform hills 
 landform_sa<-terra::rast("./_MyData/landforms/hills.tif")
 landform_map_sa<-ggplot() +
   tidyterra::geom_spatraster(data=as.factor(landform_sa)) +
@@ -425,6 +425,7 @@ pointdata<-cbind(dist2river_points[,2],elevation_points[,2],
                  landform_points[,2],woody_points[,2]) |>
   as_tibble()
 pointdata
+pointdata<-pointdata[complete.cases(pointdata),]
 
 # plot how woody cover is predicted by different variables
 # Create a correlation panel plot
