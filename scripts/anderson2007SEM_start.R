@@ -54,25 +54,15 @@ psych::pairs.panels(Anderson2007std %>% select(BIOMASS,RES_LHU,FIRE_FRQ,NMS,
 # browseURL("https://docs.google.com/presentation/d/1Q7uXC5Wiu0G4Xsp5uszCNHKOnf1IMI9doY-13Wbay4A/edit?usp=sharing")
 
 # Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model 
-plantqual.model <- 'LF_N ~  BIOMASS + RES_LHU + FIRE_FRQ + NMS
-                    LF_Na ~  BIOMASS + RES_LHU + FIRE_FRQ + NMS
-                    BIOMASS ~ FIRE_FRQ + RES_LHU
-                    NMS ~  FIRE_FRQ'
-plantqual.fit <- lavaan::sem(plantqual.model, data=Anderson2007std)
 
 
 # show the model results
 # goodness of fit (should be >0.9): CFI and TLI
 # badness of fit: ( should be <0.1): RMSEA, SRMR
-summary(plantqual.fit, standardized=T, fit.measures=T,rsquare=T)
 
-# visualise the model
-library(tidySEM)
-graph<-tidySEM::prepare_graph(plantqual.fit)
-tidySEM::graph_sem(model=plantqual.fit)
-get_layout(plantqual.fit)
 
 # also explore the models as shown in fig 5b and 5c of the Anderson2007 paper
+# so repeat the model for leaf P content
 
 
 
