@@ -28,7 +28,7 @@ library(lavaan)
 # LF_NA - plant leaf sodium content
 
 # dataset:
-# browseURL("https://docs.google.com/spreadsheets/d/1wk3UTAN7Cp7ZeoB0wpfW2C2eE_VoyKnJQpJ0Zrjk3yM/edit?usp=sharing")
+browseURL("https://docs.google.com/spreadsheets/d/1wk3UTAN7Cp7ZeoB0wpfW2C2eE_VoyKnJQpJ0Zrjk3yM/edit?usp=sharing")
 # read the data from the google docs link:
 Anderson2007<-read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ21uqYHZE0lUgVEou0Yp0HK_Hmjtokrmga8yx5mkV6rwWTNJUaFT9RABZtZqWUIhEArHGL7eIJY4O/pub?gid=1916700193&single=true&output=csv") %>%
   mutate(SOIL_RN=SOIL_NO3+SOIL_NH4)  # total soil reactive nitrogen
@@ -41,22 +41,28 @@ Anderson2007std
 # note that this does not affect the relations between the variables, only the scales  
 
 # make a pairs panel to inspect linearity of relations and expected normality of residuals
-psych::pairs.panels(Anderson2007 %>% select(ALL_LHU,RES_LHU,FIRE_FRQ,NMS,
-                                            LF_Na,LF_N),
+psych::pairs.panels(Anderson2007 %>% select(RES_LHU,BIOMASS,FIRE_FRQ,
+                                            NMS,LF_N),
                     stars = T, ellipses = F)
-psych::pairs.panels(Anderson2007std %>% select(BIOMASS,RES_LHU,FIRE_FRQ,NMS,
-                                            LF_Na,LF_N),
+psych::pairs.panels(Anderson2007std %>% select(RES_LHU,BIOMASS,FIRE_FRQ,
+                                               NMS,LF_N),
                     stars = T, ellipses = F)
 
 # analyse the model (response ~ predictors) with a multiple regression approach 
-
+multreg_std<-lm(LF_N~RES_LHU+BIOMASS+FIRE_FRQ+NMS,data=Anderson2007std)
+summary(multreg_std)
 # visualization of the result: 
 # browseURL("https://docs.google.com/presentation/d/1Q7uXC5Wiu0G4Xsp5uszCNHKOnf1IMI9doY-13Wbay4A/edit?usp=sharing")
 
 # Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model 
-
-
+Leaf_N_model<-'LF_N~BIOMASS+RES_LHU+FIRE_FRQ+NMS
+               BIOMASS~FIRE_FRQ+RES_LHU
+               NMS~FIRE_FRQ+RES_LHU'
+Leaf_N_model
+Leaf_N_fit<-lavaan::sem(Leaf_N_model,data=Anderson2007std)
 # show the model results
+summary(Leaf_N_fit,standardized=T,fit.measures=T,rsquare=T)
+
 # goodness of fit (should be >0.9): CFI and TLI
 # badness of fit: ( should be <0.1): RMSEA, SRMR
 
