@@ -56,7 +56,8 @@ model_burnfreq <- MASS::glm.nb(burnfreq ~ CorProtAr + rainfall,
 summary(model_burnfreq)
 
 p3<-ggplot(data=pointdata,aes(y=burnfreq,x=CorProtAr))+
-  geom_jitter(width = 0.05, height = 0.1) +
+#     geom_point()+
+    geom_jitter(width = 0.05, height = 0.1) +
   geom_smooth(method="glm",
               method.args=list(family=quasipoisson),  # close to glm.nb
               formula= y~x,
@@ -72,7 +73,7 @@ p4
 
 # model_cec: predicted by rainfall
 
-model_cec <- glm(cec ~ rainfall + CorProtAr, 
+model_cec <- lm(cec ~ rainfall + CorProtAr, 
                       data = pointdata)
 summary(model_cec)
 
@@ -105,7 +106,7 @@ p7<-ggplot(data=pointdata,aes(y=CorProtAr,x=elevation))+
 p7
 
 # model_rainfall: rainfall predicted by elevation
-model_rainfall <- glm(rainfall ~ elevation, 
+model_rainfall <- lm(rainfall ~ elevation, 
               data = pointdata)
 summary(model_rainfall)
 
